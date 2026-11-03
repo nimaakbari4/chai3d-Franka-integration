@@ -214,6 +214,7 @@ namespace chai3d
         Eigen::Vector3d cartesian_force;
         Eigen::Vector3d cartesian_torque;
         std::atomic<bool> hapticLoopRunning{false};
+        std::atomic<bool> stopRequested{false};
         bool firstRunOfHapticLoop;
 
         std::unique_ptr<std::thread> FR3_hapticThread; // Thread for haptic loop
