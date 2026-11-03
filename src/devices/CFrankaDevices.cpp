@@ -244,14 +244,10 @@ namespace chai3d
                 return tau_cmd_array;
             }
             else
-            {
-                // throw std::runtime_error("Torque control loop stopped running.");
-                std::cout << "torque control loop is off" << std::endl;
-                exit(1); // This is the only way I could terminate the torque control loop!
-                std::array<double, 7> tau_cmd_array{};
-
-                return tau_cmd_array;
-            }
+{
+    return franka::MotionFinished(
+        franka::Torques(robot_state.tau_J_d));
+}
         };
     }
 
