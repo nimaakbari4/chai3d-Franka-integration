@@ -48,6 +48,7 @@
 #include <iostream> // TODO: REMOVE IF NOT NEEDED
 #include <thread>   // TODO: REMOVE IF NOT NEEDED
 #include <chrono>   // TODO: REMOVE IF NOT NEEDED
+#include <franka/control_tools.h>
 //------------------------------------------------------------------------------
 #if defined(C_ENABLE_FRANKA_DEVICE_SUPPORT)
 //------------------------------------------------------------------------------
@@ -202,7 +203,15 @@ namespace chai3d
         }
         // std::cout << "in cFrankaDevice: Franka Robot found and conncection made successfully ." << std::endl;
 
-
+        #if defined(LINUX)
+        sched_param graphicsPriority{};
+        if (pthread_setschedparam(
+                pthread_self(), SCHED_OTHER, &graphicsPriority) != 0)
+        {
+            throw franka::RealtimeException(
+                "Could not restore graphics thread scheduling.");
+        }
+        #endif
         // define callback for the FR3's torque control loop
         hapticLoopRunning = false;
         firstRunOfHapticLoop = true;
@@ -301,6 +310,12 @@ namespace chai3d
 {
     try
     {
+        std::string schedulingError;
+        if (!franka::setCurrentThreadToHighestSchedulerPriority(
+        &schedulingError))
+        {
+        throw franka::RealtimeException(schedulingError);
+        }
         fr3->control(cFrankaDevice::haptic_control_callback, true);
     }
     catch (const std::exception &ex)
