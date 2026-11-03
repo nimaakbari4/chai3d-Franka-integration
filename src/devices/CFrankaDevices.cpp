@@ -208,6 +208,11 @@ namespace chai3d
         firstRunOfHapticLoop = true;
         haptic_control_callback = [this](const franka::RobotState &robot_state, franka::Duration period) -> franka::Torques
         {
+            if (stopRequested.load())
+{
+    return franka::MotionFinished(
+        franka::Torques(robot_state.tau_J_d));
+}
             if (firstRunOfHapticLoop)
             {
                 std::lock_guard<std::mutex> guard(mtx);
@@ -293,6 +298,9 @@ namespace chai3d
 
         // This is where the FR3's torque control loop is initiated
         internal_time = 0.0;
+        stopRequested = false;
+        hapticLoopRunning = false;
+        firstRunOfHapticLoop = true;
         std::function<void()> lambdaFun = [this]()
 {
     try
@@ -337,15 +345,11 @@ namespace chai3d
     //==============================================================================
     bool cFrankaDevice::close()
     {
+        stopRequested = true;
         // check if the system has been opened previously
         if (!m_deviceReady)
             return (C_ERROR);
 
-        {
-            std::lock_guard<std::mutex> guard(mtx);
-            hapticLoopRunning = false;
-            std::cout << "Stopping the haptic loop and exiting with code (1)." << std::endl;
-        }
         if (FR3_hapticThread && FR3_hapticThread->joinable())
         {
             FR3_hapticThread->join();
