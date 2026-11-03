@@ -189,14 +189,11 @@ namespace chai3d
         cartesian_force.setZero();
         cartesian_torque.setZero();
 
-        fr3 = nullptr;
-        try
-        {
-            fr3 = new franka::Robot("172.16.0.2"); // TODO: make it an input argument
-            cFrankaDevice::setDefaultBehavior(*fr3);
-            model = fr3->loadModel();
-            m_deviceAvailable = true;
-        }
+     try
+{
+    cFrankaDevice::setDefaultBehavior(*fr3);
+    m_deviceAvailable = true;
+}
         catch (const std::exception &ex)
         {
             // print exception
