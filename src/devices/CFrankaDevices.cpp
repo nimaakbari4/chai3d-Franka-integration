@@ -263,11 +263,7 @@ namespace chai3d
     //==============================================================================
     cFrankaDevice::~cFrankaDevice()
     {
-        // close connection to device
-        if (m_deviceReady)
-        {
-            close();
-        }
+        close();
     }
 
     //==============================================================================
@@ -287,12 +283,12 @@ namespace chai3d
         }
 
         // if system is already opened then return
-        if (m_deviceReady)
+        if (m_deviceReady && hapticLoopRunning.load())
         {
             // std::cout << "Device already open and ready." << std::endl;
             return (C_SUCCESS);
         }
-
+        close();
         // Read initial position, orientation and bias torques like initial contacts from the robot
         getRobotInitialStates();
 
@@ -316,7 +312,6 @@ namespace chai3d
     hapticLoopRunning = false;
 };
         FR3_hapticThread = std::unique_ptr<std::thread>(new std::thread(lambdaFun));
-        FR3_hapticThread->detach();
         int waitTime = 1000; // in ms
         cSleepMs(waitTime);
 
@@ -331,7 +326,7 @@ namespace chai3d
         {
             std::cout << "Franka torque control thread failed to start after " << waitTime << " ms wait." << std::endl;
             // std::cout << "Returning false in open() function." << std::endl;
-            m_deviceReady = false;
+            close();
             return (C_ERROR);
         }
     }
@@ -344,23 +339,26 @@ namespace chai3d
     */
     //==============================================================================
     bool cFrankaDevice::close()
+{
+    stopRequested = true;
+
+    if (FR3_hapticThread && FR3_hapticThread->joinable())
     {
-        stopRequested = true;
-        // check if the system has been opened previously
-        if (!m_deviceReady)
-            return (C_ERROR);
-
-        if (FR3_hapticThread && FR3_hapticThread->joinable())
-        {
-            FR3_hapticThread->join();
-        }
-        cSleepMs(100);
-
-        // update status
-        m_deviceReady = false;
-        bool result = C_SUCCESS; // if the operation fails, set value to C_ERROR.
-        return (result);
+        FR3_hapticThread->join();
     }
+
+    FR3_hapticThread.reset();
+    hapticLoopRunning = false;
+    m_deviceReady = false;
+
+    {
+        std::lock_guard<std::mutex> guard(mtx);
+        cartesian_force.setZero();
+        cartesian_torque.setZero();
+    }
+
+    return C_SUCCESS;
+}
 
     //==============================================================================
     /*!
