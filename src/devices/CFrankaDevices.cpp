@@ -238,7 +238,7 @@ namespace chai3d
                     current_EE_rotationMatrix = get_rotationMatrix(robot_state_copy);
                 }
                 // Calculate the joint torques from the interactions in the virtual environment
-                Eigen::VectorXd tau_cmd(6);
+                Eigen::VectorXd tau_cmd(7);
                 tau_cmd << calc_jointTorques(robot_state_copy);
 
                 // Send the joint torques to the robot
