@@ -297,7 +297,20 @@ namespace chai3d
 
         // This is where the FR3's torque control loop is initiated
         internal_time = 0.0;
-        std::function<void()> lambdaFun = [this]() { fr3->control(cFrankaDevice::haptic_control_callback, true); };
+        std::function<void()> lambdaFun = [this]()
+{
+    try
+    {
+        fr3->control(cFrankaDevice::haptic_control_callback, true);
+    }
+    catch (const std::exception &ex)
+    {
+        std::cerr << "Franka control stopped: "
+                  << ex.what() << std::endl;
+    }
+
+    hapticLoopRunning = false;
+};
         FR3_hapticThread = std::unique_ptr<std::thread>(new std::thread(lambdaFun));
         FR3_hapticThread->detach();
         int waitTime = 1000; // in ms
