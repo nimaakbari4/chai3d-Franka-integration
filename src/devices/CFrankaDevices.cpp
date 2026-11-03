@@ -300,7 +300,7 @@ namespace chai3d
         std::function<void()> lambdaFun = [this]() { fr3->control(cFrankaDevice::haptic_control_callback, true); };
         FR3_hapticThread = std::unique_ptr<std::thread>(new std::thread(lambdaFun));
         FR3_hapticThread->detach();
-        int waitTime = 100; // in ms
+        int waitTime = 1000; // in ms
         cSleepMs(waitTime);
 
         if (hapticLoopRunning)
