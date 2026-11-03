@@ -57,7 +57,7 @@
 #include "system/CThread.h"
 #include <thread> // Todo: REMOVE
 #include <mutex>    // for conflict resolution in multi-threading
-
+#include <atomic>
 
 //------------------------------------------------------------------------------
 
@@ -213,7 +213,7 @@ namespace chai3d
         Eigen::VectorXd initial_tau_ext;
         Eigen::Vector3d cartesian_force;
         Eigen::Vector3d cartesian_torque;
-        bool hapticLoopRunning;
+        std::atomic<bool> hapticLoopRunning{false};
         bool firstRunOfHapticLoop;
 
         std::unique_ptr<std::thread> FR3_hapticThread; // Thread for haptic loop
